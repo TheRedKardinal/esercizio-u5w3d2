@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: eshopcomics
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eshopcomics
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:c2hvcGNvbWljcy1kZXYtc2VjcmV0LWtleS1jaGFuZ2UtbWUtaW4tcHJvZHVjdGlvbi0xMjM0NTY3ODk=}
+    expiration-ms: 86400000
+
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    email: ${ADMIN_EMAIL:admin@eshopcomics.com}
+    password: ${ADMIN_PASSWORD:Admin@12345}
+
+  marvel:
+    public-key: ${MARVEL_PUBLIC_KEY:}
+    private-key: ${MARVEL_PRIVATE_KEY:}
+    base-url: https://gateway.marvel.com/v1/public
