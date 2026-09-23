@@ -3,6 +3,7 @@ export interface Item {
   name: string
   price: number
   author: string | null
+  publisher: string | null
   coverUrl: string | null
   stock: number
   createdAt: string

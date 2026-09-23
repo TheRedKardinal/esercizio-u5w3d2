@@ -18,6 +18,8 @@ public class ItemUpdateRequest {
 
     private String author;
 
+    private String publisher;
+
     private String coverUrl;
 
     @Min(value = 0, message = "Lo stock non può essere negativo")

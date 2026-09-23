@@ -34,6 +34,8 @@ public class Item {
 
     private String author;
 
+    private String publisher;
+
     @Column(name = "cover_url")
     private String coverUrl;
 

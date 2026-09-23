@@ -2,7 +2,6 @@ package com.example.demo.integration.openlibrary;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -16,11 +15,10 @@ public class OpenLibraryClient {
 
     private final RestClient restClient;
 
-    public OpenLibraryClient(@Value("${app.open-library.base-url}") String baseUrl,
-                              @Value("${app.open-library.user-agent}") String userAgent) {
+    public OpenLibraryClient(OpenLibraryProperties properties) {
         this.restClient = RestClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader(HttpHeaders.USER_AGENT, userAgent)
+                .baseUrl(properties.getBaseUrl())
+                .defaultHeader(HttpHeaders.USER_AGENT, properties.getUserAgent())
                 .build();
     }
 

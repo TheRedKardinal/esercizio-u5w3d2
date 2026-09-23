@@ -63,6 +63,7 @@ export default function ItemCard({ item }: ItemCardProps) {
         ) : (
           <div className="cs-card__cover-placeholder">?</div>
         )}
+        {item.publisher && <span className="cs-card__publisher">{item.publisher}</span>}
         {outOfStock && <span className="cs-card__badge">ESAURITO</span>}
       </div>
 

@@ -1,13 +1,13 @@
 package com.example.demo.config;
 
 import com.example.demo.integration.openlibrary.OpenLibraryClient;
+import com.example.demo.integration.openlibrary.OpenLibraryProperties;
 import com.example.demo.integration.openlibrary.OpenLibrarySubjectResponse;
 import com.example.demo.model.Item;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.service.PriceGeneratorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -21,6 +21,10 @@ import java.util.Map;
  * Importa il catalogo fumetti da Open Library una sola volta all'avvio
  * (se la tabella items è vuota) e lo salva nel DB, così l'API esterna
  * non viene richiamata ad ogni richiesta.
+ *
+ * Le subject dedicate (es. marvel_comics, dc_comics) vengono importate per
+ * prime così da poter taggare correttamente il publisher; le subject generiche
+ * (comics, graphic_novels) riempiono il resto del catalogo senza publisher noto.
  */
 @Component
 @Order(2)
@@ -31,26 +35,16 @@ public class ComicCatalogSeeder implements CommandLineRunner {
     private final OpenLibraryClient openLibraryClient;
     private final ItemRepository itemRepository;
     private final PriceGeneratorService priceGeneratorService;
-
-    private final List<String> subjects;
-    private final int limitPerPage;
-    private final int pagesPerSubject;
-    private final int maxItems;
+    private final OpenLibraryProperties properties;
 
     public ComicCatalogSeeder(OpenLibraryClient openLibraryClient,
                                ItemRepository itemRepository,
                                PriceGeneratorService priceGeneratorService,
-                               @Value("${app.open-library.subjects}") List<String> subjects,
-                               @Value("${app.open-library.limit}") int limitPerPage,
-                               @Value("${app.open-library.pages}") int pagesPerSubject,
-                               @Value("${app.open-library.max-items}") int maxItems) {
+                               OpenLibraryProperties properties) {
         this.openLibraryClient = openLibraryClient;
         this.itemRepository = itemRepository;
         this.priceGeneratorService = priceGeneratorService;
-        this.subjects = subjects;
-        this.limitPerPage = limitPerPage;
-        this.pagesPerSubject = pagesPerSubject;
-        this.maxItems = maxItems;
+        this.properties = properties;
     }
 
     @Override
@@ -62,21 +56,11 @@ public class ComicCatalogSeeder implements CommandLineRunner {
 
         Map<String, Item> itemsByKey = new LinkedHashMap<>();
 
-        for (String subject : subjects) {
-            for (int page = 0; page < pagesPerSubject && itemsByKey.size() < maxItems; page++) {
-                int offset = page * limitPerPage;
-                List<OpenLibrarySubjectResponse.Work> works = openLibraryClient.fetchSubjectWorks(subject, limitPerPage, offset);
+        properties.getPublisherSubjects()
+                .forEach((subject, publisher) -> importSubject(subject, publisher, itemsByKey));
 
-                for (OpenLibrarySubjectResponse.Work work : works) {
-                    if (itemsByKey.size() >= maxItems) {
-                        break;
-                    }
-                    if (work.getKey() == null || work.getTitle() == null || work.getCoverId() == null) {
-                        continue;
-                    }
-                    itemsByKey.computeIfAbsent(work.getKey(), key -> toItem(work));
-                }
-            }
+        for (String subject : properties.getSubjects()) {
+            importSubject(subject, null, itemsByKey);
         }
 
         if (itemsByKey.isEmpty()) {
@@ -88,9 +72,28 @@ public class ComicCatalogSeeder implements CommandLineRunner {
         log.info("Importati {} fumetti da Open Library", itemsByKey.size());
     }
 
-    private Item toItem(OpenLibrarySubjectResponse.Work work) {
+    private void importSubject(String subject, String publisher, Map<String, Item> itemsByKey) {
+        for (int page = 0; page < properties.getPages() && itemsByKey.size() < properties.getMaxItems(); page++) {
+            int offset = page * properties.getLimit();
+            List<OpenLibrarySubjectResponse.Work> works =
+                    openLibraryClient.fetchSubjectWorks(subject, properties.getLimit(), offset);
+
+            for (OpenLibrarySubjectResponse.Work work : works) {
+                if (itemsByKey.size() >= properties.getMaxItems()) {
+                    break;
+                }
+                if (work.getKey() == null || work.getTitle() == null || work.getCoverId() == null) {
+                    continue;
+                }
+                itemsByKey.computeIfAbsent(work.getKey(), key -> toItem(work, publisher));
+            }
+        }
+    }
+
+    private Item toItem(OpenLibrarySubjectResponse.Work work, String publisher) {
         Item item = new Item(work.getTitle(), priceGeneratorService.generate());
         item.setOpenLibraryKey(work.getKey());
+        item.setPublisher(publisher);
         item.setCoverUrl("https://covers.openlibrary.org/b/id/" + work.getCoverId() + "-M.jpg");
         item.setStock(priceGeneratorService.generateStock());
 

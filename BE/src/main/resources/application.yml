@@ -39,7 +39,12 @@ app:
   open-library:
     base-url: https://openlibrary.org
     user-agent: "ComicShop/1.0 (c.giasi97@gmail.com)"
-    subjects: comics,graphic_novels
+    subjects:
+      - comics
+      - graphic_novels
+    publisher-subjects:
+      marvel_comics: Marvel
+      dc_comics: DC Comics
     limit: 40
     pages: 2
     max-items: 120
