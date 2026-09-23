@@ -32,6 +32,17 @@ public class Item {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    private String author;
+
+    @Column(name = "cover_url")
+    private String coverUrl;
+
+    @Column(nullable = false)
+    private int stock;
+
+    @Column(name = "open_library_key", unique = true)
+    private String openLibraryKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

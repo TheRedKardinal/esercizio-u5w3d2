@@ -49,6 +49,9 @@ public class ItemService {
     public ItemResponse create(ItemCreateRequest request) {
         java.math.BigDecimal price = request.getPrice() != null ? request.getPrice() : priceGeneratorService.generate();
         Item item = new Item(request.getName(), price);
+        item.setAuthor(request.getAuthor());
+        item.setCoverUrl(request.getCoverUrl());
+        item.setStock(request.getStock() != null ? request.getStock() : 0);
         itemRepository.save(item);
         return toResponse(item, false);
     }
@@ -62,6 +65,15 @@ public class ItemService {
         }
         if (request.getPrice() != null) {
             item.setPrice(request.getPrice());
+        }
+        if (request.getAuthor() != null) {
+            item.setAuthor(request.getAuthor());
+        }
+        if (request.getCoverUrl() != null) {
+            item.setCoverUrl(request.getCoverUrl());
+        }
+        if (request.getStock() != null) {
+            item.setStock(request.getStock());
         }
 
         return toResponse(item, false);
@@ -102,6 +114,7 @@ public class ItemService {
     }
 
     private ItemResponse toResponse(Item item, boolean favourite) {
-        return new ItemResponse(item.getId(), item.getName(), item.getPrice(), item.getCreatedAt(), favourite);
+        return new ItemResponse(item.getId(), item.getName(), item.getPrice(), item.getAuthor(), item.getCoverUrl(),
+                item.getStock(), item.getCreatedAt(), favourite);
     }
 }

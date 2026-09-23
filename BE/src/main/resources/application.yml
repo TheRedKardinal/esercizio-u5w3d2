@@ -35,3 +35,13 @@ app:
     public-key: ${MARVEL_PUBLIC_KEY:}
     private-key: ${MARVEL_PRIVATE_KEY:}
     base-url: https://gateway.marvel.com/v1/public
+
+  open-library:
+    base-url: https://openlibrary.org
+    user-agent: "ComicShop/1.0 (c.giasi97@gmail.com)"
+    subjects:
+      - comics
+      - graphic_novels
+    limit: 40
+    pages: 2
+    max-items: 120
